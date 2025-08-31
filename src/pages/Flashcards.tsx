@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import MoodSelector, { StudyMood } from "@/components/MoodSelector";
 import {
   RotateCcw,
   ChevronLeft,
@@ -17,6 +18,7 @@ const Flashcards = () => {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [studiedCards, setStudiedCards] = useState<Set<number>>(new Set());
+  const [studyMood, setStudyMood] = useState<StudyMood>('focus');
 
   const flashcards = [
     {
@@ -86,18 +88,30 @@ const Flashcards = () => {
     }
   };
 
+  const getMoodGradient = (mood: StudyMood) => {
+    switch (mood) {
+      case 'focus': return 'bg-gradient-focus';
+      case 'relax': return 'bg-gradient-relax';
+      case 'sprint': return 'bg-gradient-sprint';
+      default: return 'bg-gradient-primary';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-4">
+          <h1 className="text-4xl font-serif font-bold text-foreground mb-4">
             Study Flashcards
           </h1>
           <p className="text-xl text-muted-foreground">
             Review key concepts with interactive flashcards
           </p>
         </div>
+
+        {/* Mood Selection */}
+        <MoodSelector selectedMood={studyMood} onMoodChange={setStudyMood} />
 
         {/* Progress Section */}
         <div className="mb-8">
@@ -132,7 +146,7 @@ const Flashcards = () => {
                 <div className="text-center">
                   {!isFlipped ? (
                     <>
-                      <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-6 shadow-glow">
+                      <div className={`w-16 h-16 ${getMoodGradient(studyMood)} rounded-full flex items-center justify-center mx-auto mb-6 shadow-glow`}>
                         <Brain className="w-8 h-8 text-white" />
                       </div>
                       <h3 className="text-xl font-semibold text-foreground mb-4">
@@ -147,7 +161,7 @@ const Flashcards = () => {
                     </>
                   ) : (
                     <>
-                      <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-6 shadow-glow">
+                      <div className={`w-16 h-16 ${getMoodGradient(studyMood)} rounded-full flex items-center justify-center mx-auto mb-6 shadow-glow`}>
                         <CheckCircle className="w-8 h-8 text-white" />
                       </div>
                       <h3 className="text-xl font-semibold text-foreground mb-4">

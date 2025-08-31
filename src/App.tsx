@@ -10,6 +10,7 @@ import QuizGeneration from "./pages/QuizGeneration";
 import Flashcards from "./pages/Flashcards";
 import StudyGuide from "./pages/StudyGuide";
 import Progress from "./pages/Progress";
+import StudyJournalPage from "./pages/StudyJournalPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/flashcards" element={<Flashcards />} />
             <Route path="/study-guide" element={<StudyGuide />} />
             <Route path="/progress" element={<Progress />} />
+            <Route path="/journal" element={<StudyJournalPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

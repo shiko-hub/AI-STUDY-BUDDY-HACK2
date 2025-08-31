@@ -72,7 +72,7 @@ const Index = () => {
         />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
           <div className="text-center">
-            <h1 className="text-5xl lg:text-7xl font-bold text-white mb-6 leading-tight">
+            <h1 className="text-5xl lg:text-7xl font-serif font-bold text-white mb-6 leading-tight">
               AI Quiz & Study
               <span className="block bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
                 Assistant
