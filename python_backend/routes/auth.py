@@ -3,8 +3,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from supabase import Client
 from typing import Optional
 import os
-from ..models import UserCreate, UserLogin, User, TokenResponse, APIResponse
-from ..database import SupabaseDatabase
+from models import UserCreate, UserLogin, User, TokenResponse, APIResponse
+from database import SupabaseDatabase
 
 router = APIRouter()
 security = HTTPBearer()

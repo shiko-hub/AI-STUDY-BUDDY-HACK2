@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from typing import List, Optional
-from ..models import Flashcard, FlashcardCreate, FlashcardReview, APIResponse
-from ..database import SupabaseDatabase
-from .auth import get_current_user, get_database
+from models import Flashcard, FlashcardCreate, FlashcardReview, APIResponse
+from database import SupabaseDatabase
+from routes.auth import get_current_user, get_database
 
 router = APIRouter()
 

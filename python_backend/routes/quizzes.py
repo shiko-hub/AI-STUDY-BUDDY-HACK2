@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
 from typing import List, Optional
-from ..models import Quiz, QuizCreate, QuizAttempt, QuizAttemptCreate, APIResponse
-from ..database import SupabaseDatabase
-from .auth import get_current_user, get_database
+from models import Quiz, QuizCreate, QuizAttempt, QuizAttemptCreate, APIResponse, QuizDifficulty, QuizType
+from database import SupabaseDatabase
+from routes.auth import get_current_user, get_database
 
 router = APIRouter()
 
@@ -140,11 +140,12 @@ async def generate_quiz_from_pdf(
     file: UploadFile = File(...),
     subject: str = "General",
     difficulty: str = "medium",
+    quiz_type: str = "multiple_choice",
     num_questions: int = 10,
     current_user = Depends(get_current_user),
     db: SupabaseDatabase = Depends(get_database)
 ):
-    """Generate a quiz from uploaded PDF (placeholder for AI integration)"""
+    """Generate a quiz from uploaded PDF using AI"""
     try:
         # Validate file type
         if file.content_type != "application/pdf":
@@ -153,23 +154,74 @@ async def generate_quiz_from_pdf(
                 detail="Only PDF files are supported"
             )
         
-        # TODO: Integrate with AI service to extract content and generate questions
-        # For now, return a mock response
+        # Validate file size (limit to 10MB)
+        max_size = 10 * 1024 * 1024  # 10MB
+        if file.size and file.size > max_size:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File size must be less than 10MB"
+            )
+        
+        # Read file content
+        content = await file.read()
+        
+        # Import AI service here to avoid circular imports
+        from services.ai_service import ai_service
+        
+        # Extract text from PDF
+        extracted_text = ai_service.extract_text_from_pdf(content)
+        
+        if not extracted_text.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Could not extract text from PDF. Please ensure the PDF contains readable text."
+            )
+        
+        # Generate quiz questions using AI
+        questions = await ai_service.generate_quiz_questions(
+            content=extracted_text,
+            subject=subject,
+            difficulty=difficulty,
+            quiz_type=quiz_type,
+            num_questions=num_questions
+        )
+        
+        if not questions:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to generate questions from the content"
+            )
+        
+        # Create quiz data
+        quiz_data = QuizCreate(
+            title=f"Quiz from {file.filename}",
+            subject=subject,
+            difficulty=difficulty,
+            quiz_type=quiz_type,
+            questions=questions,
+            estimated_time=num_questions * 2  # 2 minutes per question
+        )
+        
+        # Save quiz to database
+        quiz_id = await db.create_quiz(quiz_data, current_user.id)
         
         return APIResponse(
             success=True,
-            message="PDF processed successfully. Quiz generation in progress.",
+            message="Quiz generated successfully from PDF!",
             data={
-                "file_name": file.filename,
-                "file_size": file.size,
-                "processing_status": "pending",
-                "estimated_questions": num_questions
+                "quiz_id": quiz_id,
+                "title": quiz_data.title,
+                "questions_generated": len(questions),
+                "estimated_time": quiz_data.estimated_time,
+                "difficulty": difficulty,
+                "subject": subject
             }
         )
+        
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to process PDF: {str(e)}"
+            detail=f"Failed to process PDF and generate quiz: {str(e)}"
         )

@@ -37,27 +37,66 @@ const StudyJournal = () => {
     }
   }, []);
 
-  const saveEntry = () => {
+  const saveEntry = async () => {
     if (!currentReflection.trim()) return;
 
     const today = new Date().toISOString().split('T')[0];
-    const motivation = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
     
-    const newEntry: JournalEntry = {
-      id: Date.now().toString(),
-      date: today,
-      mood: "productive", // Could be enhanced with mood selection
-      reflection: currentReflection,
-      motivation: motivation,
-    };
+    try {
+      // Get AI motivation message
+      const response = await fetch('http://localhost:8000/api/ai/motivation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify({
+          preferred_tone: "encouraging"
+        })
+      });
 
-    const updatedEntries = entries.filter(entry => entry.date !== today);
-    updatedEntries.unshift(newEntry);
-    
-    setEntries(updatedEntries);
-    setTodaysEntry(newEntry);
-    localStorage.setItem('studyJournal', JSON.stringify(updatedEntries));
-    setCurrentReflection("");
+      const result = await response.json();
+      let motivation = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
+      
+      if (result.success && result.data.motivation_message) {
+        motivation = result.data.motivation_message;
+      }
+
+      const newEntry: JournalEntry = {
+        id: Date.now().toString(),
+        date: today,
+        mood: "productive",
+        reflection: currentReflection,
+        motivation: motivation,
+      };
+
+      const updatedEntries = entries.filter(entry => entry.date !== today);
+      updatedEntries.unshift(newEntry);
+      
+      setEntries(updatedEntries);
+      setTodaysEntry(newEntry);
+      localStorage.setItem('studyJournal', JSON.stringify(updatedEntries));
+      setCurrentReflection("");
+    } catch (error) {
+      // Fallback to random motivational message if AI fails
+      const motivation = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
+      
+      const newEntry: JournalEntry = {
+        id: Date.now().toString(),
+        date: today,
+        mood: "productive",
+        reflection: currentReflection,
+        motivation: motivation,
+      };
+
+      const updatedEntries = entries.filter(entry => entry.date !== today);
+      updatedEntries.unshift(newEntry);
+      
+      setEntries(updatedEntries);
+      setTodaysEntry(newEntry);
+      localStorage.setItem('studyJournal', JSON.stringify(updatedEntries));
+      setCurrentReflection("");
+    }
   };
 
   return (

@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import {
   Upload,
   FileText,
@@ -16,10 +18,13 @@ import {
 
 const QuizGeneration = () => {
   const [file, setFile] = useState<File | null>(null);
-  const [quizType, setQuizType] = useState("mcq");
+  const [quizType, setQuizType] = useState("multiple_choice");
   const [difficulty, setDifficulty] = useState("medium");
+  const [subject, setSubject] = useState("General");
+  const [numQuestions, setNumQuestions] = useState(10);
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = event.target.files?.[0];
@@ -38,7 +43,7 @@ const QuizGeneration = () => {
     }
   };
 
-  const handleGenerateQuiz = () => {
+  const handleGenerateQuiz = async () => {
     if (!file) {
       toast({
         title: "No file selected",
@@ -49,14 +54,46 @@ const QuizGeneration = () => {
     }
 
     setIsGenerating(true);
-    // Simulate quiz generation
-    setTimeout(() => {
-      setIsGenerating(false);
-      toast({
-        title: "Quiz generated successfully!",
-        description: "Your personalized quiz is ready. Redirecting...",
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('subject', subject);
+      formData.append('difficulty', difficulty);
+      formData.append('quiz_type', quizType);
+      formData.append('num_questions', numQuestions.toString());
+
+      const response = await fetch('http://localhost:8000/api/quizzes/generate-from-pdf', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        }
       });
-    }, 3000);
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast({
+          title: "Quiz generated successfully!",
+          description: `Created ${result.data.questions_generated} questions from your PDF.`,
+        });
+        
+        // Navigate to the generated quiz
+        navigate(`/quiz/${result.data.quiz_id}`);
+      } else {
+        throw new Error(result.message || 'Failed to generate quiz');
+      }
+    } catch (error) {
+      console.error('Quiz generation error:', error);
+      toast({
+        title: "Generation failed",
+        description: error instanceof Error ? error.message : "Failed to generate quiz. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -142,21 +179,48 @@ const QuizGeneration = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Subject */}
+                <div className="space-y-3">
+                  <Label className="text-base font-medium">Subject</Label>
+                  <Input
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    placeholder="Enter subject (e.g., Mathematics, Biology)"
+                    className="w-full"
+                  />
+                </div>
+
+                {/* Number of Questions */}
+                <div className="space-y-3">
+                  <Label className="text-base font-medium">Number of Questions</Label>
+                  <Select value={numQuestions.toString()} onValueChange={(value) => setNumQuestions(parseInt(value))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5">5 Questions</SelectItem>
+                      <SelectItem value="10">10 Questions</SelectItem>
+                      <SelectItem value="15">15 Questions</SelectItem>
+                      <SelectItem value="20">20 Questions</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 {/* Quiz Type */}
                 <div className="space-y-3">
                   <Label className="text-base font-medium">Quiz Type</Label>
                   <RadioGroup value={quizType} onValueChange={setQuizType}>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="mcq" id="mcq" />
-                      <Label htmlFor="mcq">Multiple Choice Questions</Label>
+                      <RadioGroupItem value="multiple_choice" id="multiple_choice" />
+                      <Label htmlFor="multiple_choice">Multiple Choice Questions</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="truefalse" id="truefalse" />
-                      <Label htmlFor="truefalse">True/False</Label>
+                      <RadioGroupItem value="true_false" id="true_false" />
+                      <Label htmlFor="true_false">True/False</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="short" id="short" />
-                      <Label htmlFor="short">Short Answers</Label>
+                      <RadioGroupItem value="short_answer" id="short_answer" />
+                      <Label htmlFor="short_answer">Short Answers</Label>
                     </div>
                   </RadioGroup>
                 </div>

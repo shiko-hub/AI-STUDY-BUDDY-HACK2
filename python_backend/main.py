@@ -36,7 +36,7 @@ supabase: Client = create_client(supabase_url, supabase_key)
 security = HTTPBearer()
 
 # Import routes
-from python_backend.routes import auth, quizzes, flashcards, progress, study_guides
+from routes import auth, quizzes, flashcards, progress, study_guides, ai
 
 # Include routers
 app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
@@ -44,6 +44,7 @@ app.include_router(quizzes.router, prefix="/api/quizzes", tags=["quizzes"])
 app.include_router(flashcards.router, prefix="/api/flashcards", tags=["flashcards"])
 app.include_router(progress.router, prefix="/api/progress", tags=["progress"])
 app.include_router(study_guides.router, prefix="/api/study-guides", tags=["study-guides"])
+app.include_router(ai.router, prefix="/api/ai", tags=["ai-features"])
 
 @app.get("/")
 async def root():

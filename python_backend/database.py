@@ -1,6 +1,6 @@
 from supabase import Client
 from typing import Optional, List, Dict, Any
-from .models import *
+from models import *
 import json
 from datetime import datetime
 
