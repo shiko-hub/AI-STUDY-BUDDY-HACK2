@@ -11,6 +11,7 @@ import Flashcards from "./pages/Flashcards";
 import StudyGuide from "./pages/StudyGuide";
 import Progress from "./pages/Progress";
 import StudyJournalPage from "./pages/StudyJournalPage";
+import PitchDeck from "./pages/PitchDeck";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/study-guide" element={<StudyGuide />} />
             <Route path="/progress" element={<Progress />} />
             <Route path="/journal" element={<StudyJournalPage />} />
+            <Route path="/pitch" element={<PitchDeck />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
