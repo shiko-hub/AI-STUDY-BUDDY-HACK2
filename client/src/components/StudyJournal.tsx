@@ -55,6 +55,11 @@ const StudyJournal = () => {
         })
       });
 
+      if (!response.ok) {
+        console.warn('AI motivation service unavailable, using fallback');
+        throw new Error('AI service unavailable');
+      }
+
       const result = await response.json();
       let motivation = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
       
